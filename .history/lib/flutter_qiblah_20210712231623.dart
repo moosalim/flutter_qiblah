@@ -19,19 +19,18 @@ class FlutterQiblah {
 
   Stream<QiblahDirection>? _qiblahStream;
 
-  FlutterQiblah._();
-  //  {
-  //   init();
-  // }
+  FlutterQiblah._() {
+    init();
+  }
 
-  // init() async {
-  //   await sharedPref();
-  // }
+  init() async {
+    await sharedPref();
+  }
 
-  // sharedPref() {
-  //   getDouble("lat").then((value) => lat = value);
-  //   getDouble("lon").then((value) => lon = value);
-  // }
+  sharedPref() {
+    getDouble("lat").then((value) => lat = value);
+    getDouble("lon").then((value) => lon = value);
+  }
 
   factory FlutterQiblah() {
     return _instance;
@@ -78,8 +77,8 @@ class FlutterQiblah {
   /// Qiblah varies from 0-360, offset from direction(North)
   static Stream<QiblahDirection> _merge<A, B>(
       Stream<A> streamA, Stream<B> streamB) {
-    double lat = 0.0;
-    double lon = 0.0;
+    double lat = 0;
+    double lon = 0;
     getDouble("lat").then((value) => lat = value);
     getDouble("lon").then((value) => lon = value);
     return streamA.combineLatest<B, QiblahDirection>(streamB, (dir, pos) {

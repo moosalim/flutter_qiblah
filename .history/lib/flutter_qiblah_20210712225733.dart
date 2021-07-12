@@ -13,25 +13,23 @@ import 'package:stream_transform/stream_transform.dart' show CombineLatest;
 /// Get current  location
 /// Get Qiblah direction
 class FlutterQiblah {
+  double lat = 0;
+  double lon = 0;
   static const MethodChannel _channel =
       const MethodChannel('ml.medyas.flutter_qiblah');
   static final FlutterQiblah _instance = FlutterQiblah._();
 
   Stream<QiblahDirection>? _qiblahStream;
 
-  FlutterQiblah._();
-  //  {
-  //   init();
-  // }
+  FlutterQiblah._() {
+    init();
+  }
 
-  // init() async {
-  //   await sharedPref();
-  // }
+  init() async {
+    await sharedPref();
+  }
 
-  // sharedPref() {
-  //   getDouble("lat").then((value) => lat = value);
-  //   getDouble("lon").then((value) => lon = value);
-  // }
+  sharedPref() {}
 
   factory FlutterQiblah() {
     return _instance;
@@ -78,16 +76,13 @@ class FlutterQiblah {
   /// Qiblah varies from 0-360, offset from direction(North)
   static Stream<QiblahDirection> _merge<A, B>(
       Stream<A> streamA, Stream<B> streamB) {
-    double lat = 0.0;
-    double lon = 0.0;
-    getDouble("lat").then((value) => lat = value);
-    getDouble("lon").then((value) => lon = value);
     return streamA.combineLatest<B, QiblahDirection>(streamB, (dir, pos) {
-      // final position = pos as Position;
+      final position = pos as Position;
       final event = dir as CompassEvent;
 
       // Calculate the Qiblah offset to North
-      final offSet = Utils.getOffsetFromNorth(lat, lon);
+      final offSet =
+          Utils.getOffsetFromNorth(position.latitude, position.longitude);
 
       // Adjust Qiblah direction based on North direction
       final qiblah = (event.heading ?? 0.0) + (360 - offSet);
