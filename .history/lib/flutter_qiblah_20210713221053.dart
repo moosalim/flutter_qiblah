@@ -5,7 +5,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_compass/flutter_compass.dart';
 import 'package:flutter_qiblah/shared_pref.dart';
 import 'package:flutter_qiblah/utils.dart';
-// import 'package:geolocator/geolocator.dart';
+import 'package:geolocator/geolocator.dart';
 import 'package:stream_transform/stream_transform.dart' show CombineLatest;
 
 /// [FlutterQiblah] is a singleton class that provides assess to compass events,
@@ -34,16 +34,34 @@ class FlutterQiblah {
   }
 
   /// Request Location permission, return GeolocationStatus object
-  // static Future<LocationPermission> requestPermissions() async {
-  //   return await Geolocator.requestPermission();
-  // }
+  static Future<LocationPermission> requestPermissions() async {
+    return await Geolocator.requestPermission();
+  }
 
   /// get location status: GPS enabled and the permission status with GeolocationStatus
-  // static Future<LocationStatus> checkLocationStatus() async {
-  //   final status = await Geolocator.checkPermission();
-  //   final enabled = await Geolocator.isLocationServiceEnabled();
-  //   return LocationStatus(enabled, status);
-  // }
+  static Future<LocationStatus> checkLocationStatus() async {
+    final status = await Geolocator.checkPermission();
+    final enabled = await Geolocator.isLocationServiceEnabled();
+    return LocationStatus(enabled, status);
+  }
+
+  static Stream<Position> get positionStream {
+    Position lonLat;
+    Timer.periodic(
+        Duration(seconds: 1),
+        (timer) => (mounted) {
+              lonLat = ;
+            });
+
+    // if (_instance._qiblahStream == null) {
+    //   _instance._qiblahStream = _merge<CompassEvent, Position>(
+    //     FlutterCompass.events!,
+    //     Geolocator.getPositionStream(),
+    //   );
+    // }
+
+    return lonLat!;
+  }
 
   /// Provides a stream of Map with current compass and Qiblah direction
   /// {"qiblah": QIBLAH, "direction": DIRECTION}
@@ -51,9 +69,9 @@ class FlutterQiblah {
   /// Qiblah varies from 0-360, offset from direction(North)
   static Stream<QiblahDirection> get qiblahStream {
     if (_instance._qiblahStream == null) {
-      _instance._qiblahStream = _merge<CompassEvent, CompassEvent>(
+      _instance._qiblahStream = _merge<CompassEvent, Position>(
         FlutterCompass.events!,
-        FlutterCompass.events!,
+        positionStream,
       );
     }
 
@@ -66,16 +84,16 @@ class FlutterQiblah {
   /// Qiblah varies from 0-360, offset from direction(North)
   static Stream<QiblahDirection> _merge<A, B>(
       Stream<A> streamA, Stream<B> streamB) {
-    double lat = 0.0;
-    double lon = 0.0;
-    getDouble("lat").then((value) => lat = value);
-    getDouble("lon").then((value) => lon = value);
+    // double lat = 0.0;
+    // double lon = 0.0;
+    // getDouble("lat").then((value) => lat = value);
+    // getDouble("lon").then((value) => lon = value);
     return streamA.combineLatest<B, QiblahDirection>(streamB, (dir, pos) {
-      final event1 = pos as CompassEvent;
+      final position = pos as Position;
       final event = dir as CompassEvent;
 
       // Calculate the Qiblah offset to North
-      final offSet = Utils.getOffsetFromNorth(lat, lon);
+      final offSet = Utils.getOffsetFromNorth(position.latitude, position.longitude);
 
       // Adjust Qiblah direction based on North direction
       final qiblah = (event.heading ?? 0.0) + (360 - offSet);
@@ -91,12 +109,12 @@ class FlutterQiblah {
 }
 
 /// Location Status class, contains the GPS status(Enabled or not) and GeolocationStatus
-// class LocationStatus {
-//   final bool enabled;
-//   // final LocationPermission status;
+class LocationStatus {
+  final bool enabled;
+  final LocationPermission status;
 
-//   const LocationStatus(this.enabled);
-// }
+  const LocationStatus(this.enabled, this.status);
+}
 
 /// Containing Qiblah, Direction and offset
 class QiblahDirection {
